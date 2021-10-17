@@ -1,0 +1,6 @@
+status, date
+#this is a text that will be ignored, 1234
+all, 1010
+netid, 1010
+netid, 1010_not_present
+30, 1010

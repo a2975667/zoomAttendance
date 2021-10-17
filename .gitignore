@@ -1,0 +1,8 @@
+raw_attendance
+.venv
+.vscode
+__pycache__
+attendance.csv
+all_students.json
+config.ini
+overrides.csv
