@@ -107,10 +107,14 @@ for entry in individual_override:
     if netid not in all_students:
         all_students[netid] = {}
 
-    if date not in all_students[netid]:
-        all_students[netid][date] = 75
-    else:
-        all_students[netid][date] += 75
+    if date == '0000':
+        for key in all_students[netid]:
+            all_students[netid][key] = 75
+    else: 
+        if date not in all_students[netid]:
+            all_students[netid][date] = 75
+        else:
+            all_students[netid][date] += 75
 
 # apply negative overrides
 for entry in remove_student:
