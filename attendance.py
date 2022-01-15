@@ -1,11 +1,28 @@
 import configparser
 import csv
+from curses import meta
 import json
+import re
 from datetime import date, datetime
-from os import listdir
+from os import listdir, rename
 from os.path import isfile, join
 
 from helper import is_int
+
+# cleanup raw attendance files
+def clean_up_filenames(ROOT_FOLDER, rename_files=False):
+    if rename_files:
+        for f in listdir(ROOT_FOLDER):
+            if isfile(join(ROOT_FOLDER, f)):
+                if not bool(re.match("\d{8}.*", f)):
+                    meeting_info = [r for r in csv.reader(open(join(ROOT_FOLDER, f)))][1]
+                    meeting_name = meeting_info[1].replace(" ", "_")
+                    meeting_date = meeting_info[2].split(" ")[0].split("/")
+                    meeting_date = ''.join([meeting_date[2], meeting_date[0], meeting_date[1]])
+                    filename = meeting_date + '-' + meeting_name + '.csv'
+                    print(join(ROOT_FOLDER, filename))
+                    rename(join(ROOT_FOLDER, f), join(ROOT_FOLDER, filename))
+    return [f for f in listdir(ROOT_FOLDER) if isfile(join(ROOT_FOLDER, f))]
 
 # variables
 config = configparser.ConfigParser()
@@ -16,8 +33,8 @@ DEFAULT_MIN_DURATION = int(setup['DEFAULT_MIN_DURATION'])
 DEFAULT_MAX_DURATION = int(setup['DEFAULT_MAX_DURATION'])
 YEAR = str(setup['YEAR'])
 OVERRIDE = setup['OVER_RIDE_FILE']
-attendance_files = [f for f in listdir(
-    ROOT_FOLDER) if isfile(join(ROOT_FOLDER, f))]
+RENAME_FILE = eval(setup['RENAME_FILE'].capitalize())
+attendance_files = clean_up_filenames(ROOT_FOLDER, rename_files=RENAME_FILE)
 attendance_files.sort()
 all_students = {}
 duration_tacker = {}
@@ -45,11 +62,19 @@ for status, date in overrides:
 
 # process all files
 for files in attendance_files:
-
     try:
         current_file = '/'.join([ROOT_FOLDER, files])
         # print(current_file)
         rows = [r for r in csv.reader(open(current_file))]
+
+        if "Duration (Minutes)" in rows[3]:
+            duration_idx = rows[3].index("Duration (Minutes)")
+        elif "Total Duration (Minutes)" in rows[3]:
+            duration_idx = rows[3].index("Total Duration (Minutes)")
+        else:
+            raise RuntimeError ("Cannot find duration information")
+        
+        user_email_idx = rows[3].index("User Email")
         meta_data = rows[1]
         student_data = rows[4:]
 
@@ -63,8 +88,8 @@ for files in attendance_files:
 
         for student in student_data:
             # print(student)
-            netid = student[1].split('@')[0]
-            duration = student[2]
+            netid = student[user_email_idx].split('@')[0]
+            duration = student[duration_idx]
 
             # duration processing
             if duration == 'Yes' or duration == 'No':
@@ -72,7 +97,7 @@ for files in attendance_files:
             try:
                 duration = int(duration)
             except:
-                print(duration)
+                print("Error on line 91: duration value " + str(duration))
                 continue
 
             # check if student is new

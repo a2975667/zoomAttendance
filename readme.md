@@ -13,6 +13,7 @@ No requirements.
 3. Make sure you place the folder name for the right variable
 4. Fill in the min, max attendance time to count as attendance
 5. Fill in the override filename. There must be a override file but it can only contain headers.
+6. If you want to rename your attendance files based on event and date, set `RENAME_FILE` in `config.ini` to `True`
 
 ## Override file
 
